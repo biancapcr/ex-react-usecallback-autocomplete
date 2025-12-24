@@ -8,7 +8,7 @@ function App() {
   // stato che contiene i prodotti suggeriti dall’API
   const [suggestions, setSuggestions] = useState([]);
 
-  // useEffect = esecuzione della chiamata API quando cambia la query
+  // useEffect = gestione della ricerca con debounce
   useEffect(() => {
     // se il campo di ricerca è vuoto
     // la lista dei suggerimenti viene svuotata
@@ -17,19 +17,27 @@ function App() {
       return;
     }
 
-    // chiamata API con parametro search
-    fetch(`http://localhost:3333/products?search=${query}`)
-      // conversione della risposta in JSON
-      .then((response) => response.json())
-      // salvataggio dei risultati nello stato
-      .then((data) => {
-        setSuggestions(data);
-      })
-      // gestione eventuali errori
-      .catch((error) => {
-        console.error("Errore nella ricerca prodotti:", error);
-      });
-  }, [query]); // l’effetto viene rieseguito ad ogni variazione della query
+    // creazione del timer per il debounce
+    const timerId = setTimeout(() => {
+      // chiamata API ritardata
+      fetch(`http://localhost:3333/products?search=${query}`)
+        // conversione della risposta in JSON
+        .then((response) => response.json())
+        // salvataggio dei risultati nello stato
+        .then((data) => {
+          setSuggestions(data);
+        })
+        // gestione eventuali errori
+        .catch((error) => {
+          console.error("Errore nella ricerca prodotti:", error);
+        });
+    }, 300); // tempo di attesa del debounce
+    // cleanup dell’effetto
+    // annulla il timer se la query cambia prima dei 300ms
+    return () => {
+      clearTimeout(timerId);
+    };
+  }, [query]); // l’effetto dipende dal valore della query
 
   // render del componente
   return (
